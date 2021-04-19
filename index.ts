@@ -127,7 +127,6 @@ const rouletteObserver = () => {
 }
 rouletteObserver();
 
-
 const startButton = document.getElementsByClassName('start-button')[0];
 const resetButton = document.getElementsByClassName('reset-button')[0];
 const stopButton = document.getElementsByClassName('stop-button')[0];
