@@ -127,16 +127,34 @@ const rouletteObserver = () => {
 }
 rouletteObserver();
 
-const startButton = document.getElementsByClassName('start-button')[0];
-const resetButton = document.getElementsByClassName('reset-button')[0];
-const stopButton = document.getElementsByClassName('stop-button')[0];
 
-const onClickStartButton = () => {
-  state.rouletteData = state.rouletteData.map(data => {
-    return {...data, selected: (data.selected || data.flashing), flashing: false}
-  });
-  return startRoulette();
-};
+/*
+ *******************************
+ * Button Block
+ *******************************
+*/
+
+const ButtonActionTypes = {
+  START: 'START',
+  STOP: 'STOP',
+  RESET: 'RESET',
+} as const;
+
+type ActionStatus =  ValueOf<typeof ButtonActionTypes>;
+
+type StateButton = {
+  actionStatus: ActionStatus;
+  startButton: HTMLButtonElement;
+  resetButton: HTMLButtonElement;
+  stopButton: HTMLButtonElement;
+}
+
+const stateButton: StateButton = {
+  actionStatus: ButtonActionTypes.RESET,
+  startButton: document.getElementsByClassName('start-button')[0] as HTMLButtonElement,
+  resetButton: document.getElementsByClassName('reset-button')[0] as HTMLButtonElement,
+  stopButton:  document.getElementsByClassName('stop-button')[0] as HTMLButtonElement,
+}
 
 const startRoulette = (unselectedIndex = 0) => {
   state.rouletteTimerId = setTimeout(() => {
@@ -154,23 +172,80 @@ const startRoulette = (unselectedIndex = 0) => {
   }, 100);
 };
 
+const onClickStartButton = () => {
+  state.rouletteData = state.rouletteData.map(data => {
+    return {...data, selected: (data.selected || data.flashing), flashing: false}
+  });
+  return startRoulette();
+};
+
 const onClickStopButton = (timerId: number) => {
   clearInterval(timerId);
   state.unSelectedIndices = buildShuffledUnselectedIndices();
   return null;
 };
 
-startButton.addEventListener('click', () => {
+const startButtonClicked = () => {
+  stateButton.startButton.disabled = true;
+  stateButton.stopButton.disabled = false;
+  stateButton.resetButton.disabled = true;
+}
+
+const stopButtonClicked = () => {
+  stateButton.startButton.disabled = false;
+  stateButton.stopButton.disabled = true;
+  stateButton.resetButton.disabled = false;
+}
+
+const resetButtonClicked = () => {
+  stateButton.startButton.disabled = false;
+  stateButton.stopButton.disabled = true;
+  stateButton.resetButton.disabled = true;
+}
+
+const changeButtonAttribute = (actionStatus: ActionStatus) => {
+  switch (actionStatus) {
+    case ButtonActionTypes.START:
+      startButtonClicked();
+      break;
+    case ButtonActionTypes.STOP:
+      stopButtonClicked();
+      break;
+    case ButtonActionTypes.RESET:
+      resetButtonClicked();
+      break;
+    default: break;
+  }
+}
+
+stateButton.startButton.addEventListener('click', () => {
+  stateButton.actionStatus = ButtonActionTypes.START;
   onClickStartButton();
 })
 
-resetButton.addEventListener('click', () => {
+stateButton.resetButton.addEventListener('click', () => {
+  stateButton.actionStatus = ButtonActionTypes.RESET;
   resetRoulette();
 });
 
-stopButton.addEventListener('click', () => {
+stateButton.stopButton.addEventListener('click', () => {
+  stateButton.actionStatus = ButtonActionTypes.STOP;
   const timerId = state.rouletteTimerId;
   if (timerId) {
     state.rouletteTimerId = onClickStopButton(timerId);
   }
 });
+
+const buttonObserver = () => {
+  let storedStatus = stateButton.actionStatus;
+  console.log('stateButton.actionStatus: ', stateButton.actionStatus);
+
+  setInterval(() => {
+    if (storedStatus === stateButton.actionStatus){
+      return;
+    }
+    changeButtonAttribute(stateButton.actionStatus);
+    storedStatus = stateButton.actionStatus;
+  }, 10);
+}
+buttonObserver();
