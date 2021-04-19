@@ -61,7 +61,7 @@ let state: State = {
   unSelectedIndices: [],
   rouletteTimerId : null,
 }
-const shuffle = (arr: number[]) => {
+const shuffleArray = (arr: number[]) => {
   let counter = arr.length;
   while (counter > 0) {
       const index = Math.floor((Math.random() * counter));
@@ -72,7 +72,9 @@ const shuffle = (arr: number[]) => {
   return arr;
 };
 
-state.unSelectedIndices = shuffle(getUnselectedIndices(state.rouletteData));
+const buildShuffledUnselectedIndices = () => shuffleArray(getUnselectedIndices(state.rouletteData));
+
+state.unSelectedIndices = buildShuffledUnselectedIndices();
 
 const createRouletteItem = (data: Data) => {
   const node = document.createElement('div');
@@ -109,7 +111,7 @@ const flushRoulette = (newRouletteData: Data[]) => {
 
 const resetRoulette = () => {
   state.rouletteData = state.rouletteData.map(data =>{ return{...data, flashing: false, selected: false}});
-  state.unSelectedIndices = shuffle(getUnselectedIndices(state.rouletteData));
+  state.unSelectedIndices = buildShuffledUnselectedIndices();
 }
 
 const rouletteObserver = () => {
@@ -155,7 +157,7 @@ const startRoulette = (unselectedIndex = 0) => {
 
 const onClickStopButton = (timerId: number) => {
   clearInterval(timerId);
-  state.unSelectedIndices = shuffle(getUnselectedIndices(state.rouletteData));
+  state.unSelectedIndices = buildShuffledUnselectedIndices();
   return null;
 };
 
@@ -166,6 +168,7 @@ startButton.addEventListener('click', () => {
 resetButton.addEventListener('click', () => {
   resetRoulette();
 });
+
 stopButton.addEventListener('click', () => {
   const timerId = state.rouletteTimerId;
   if (timerId) {
