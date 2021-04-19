@@ -1,0 +1,16 @@
+.roulette {
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  border: 1px solid black;
+}
+
+.roulette__number {
+  height: 40px;
+  border: 1px solid black;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
