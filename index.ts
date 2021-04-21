@@ -1,11 +1,11 @@
-type Data = {
+type RouletteData = {
   number: number;
   selected: boolean;
   flashing: boolean;
 };
 
-const getUnselectedIndices = (rouletteData: Data[]):number[] => {
-  const newIndices =  rouletteData.map((data, index) => { 
+const getUnselectedIndices = (rouletteData: RouletteData[]): number[] => {
+  const newIndices =  rouletteData.map((data, index) => {
     return (!data.selected && !data.flashing) ? index : null
   })
     .filter(index => {
@@ -27,18 +27,18 @@ const Color = {
 type ColorList = {
   selected: ValueOf<typeof Color>;
   flashing: ValueOf<typeof Color>;
-}
+};
 
 const colorList: ColorList = {
   selected: Color.ORANGE,
   flashing: Color.RED,
-}
+};
 
 type State = {
-  rouletteData : Data[];
+  rouletteData : RouletteData[];
   unSelectedIndices: number[];
   rouletteTimerId: number | null;
-}
+};
 
 let state: State = {
   rouletteData: [
@@ -60,8 +60,9 @@ let state: State = {
     { number: 16, selected: false, flashing: false},],
   unSelectedIndices: [],
   rouletteTimerId : null,
-}
-const shuffleArray = (arr: number[]) => {
+};
+
+const shuffleArray = (arr: number[]): number[] => {
   let counter = arr.length;
   while (counter > 0) {
       const index = Math.floor((Math.random() * counter));
@@ -76,7 +77,7 @@ const buildShuffledUnselectedIndices = () => shuffleArray(getUnselectedIndices(s
 
 state.unSelectedIndices = buildShuffledUnselectedIndices();
 
-const createRouletteItem = (data: Data) => {
+const createRouletteItem = (data: RouletteData) => {
   const node = document.createElement('div');
   node.textContent = data.number.toString();
   node.className = `roulette__number`
@@ -84,7 +85,7 @@ const createRouletteItem = (data: Data) => {
   return node;
 };
 
-const buildNewNode = (newRouletteData: Data[]) => {
+const buildNewNode = (newRouletteData: RouletteData[]): HTMLDivElement => {
   const newNode = document.createElement('div');
   newNode.className = 'roulette';
   for (const data of newRouletteData) {
@@ -94,7 +95,7 @@ const buildNewNode = (newRouletteData: Data[]) => {
   return newNode;
 }
 
-const flushRoulette = (newRouletteData: Data[]) => {
+const flushRoulette = (newRouletteData: RouletteData[]): RouletteData[] => {
   const newNode = buildNewNode(newRouletteData);
   let parentNode;
   try {
@@ -109,22 +110,23 @@ const flushRoulette = (newRouletteData: Data[]) => {
   return newRouletteData;
 }
 
-const resetRoulette = () => {
+const resetRoulette = (): void => {
   state.rouletteData = state.rouletteData.map(data =>{ return{...data, flashing: false, selected: false}});
   state.unSelectedIndices = buildShuffledUnselectedIndices();
 }
 
-const rouletteObserver = () => {
-  let prevRouletteData = state.rouletteData;
+const rouletteObserver = (): void => {
+  let lastModifiedRouletteData = state.rouletteData;
   setInterval(() => {
-    if(prevRouletteData === state.rouletteData) {
+    if(lastModifiedRouletteData === state.rouletteData) {
       return;
     }
     const newRouletteData = flushRoulette(state.rouletteData);
-    prevRouletteData = newRouletteData;
+    lastModifiedRouletteData = newRouletteData;
     state.rouletteData = newRouletteData;
   }, 10);
 }
+flushRoulette(state.rouletteData); // First flush
 rouletteObserver();
 
 
@@ -147,16 +149,16 @@ type StateButton = {
   startButton: HTMLButtonElement;
   resetButton: HTMLButtonElement;
   stopButton: HTMLButtonElement;
-}
+};
 
 const stateButton: StateButton = {
   actionStatus: ButtonActionTypes.RESET,
   startButton: document.getElementsByClassName('start-button')[0] as HTMLButtonElement,
   resetButton: document.getElementsByClassName('reset-button')[0] as HTMLButtonElement,
   stopButton:  document.getElementsByClassName('stop-button')[0] as HTMLButtonElement,
-}
+};
 
-const startRoulette = (unselectedIndex = 0) => {
+const startRoulette = (unselectedIndex = 0): void => {
   state.rouletteTimerId = setTimeout(() => {
     const changedRouletteData = state.rouletteData.map(data => {
       // Make a copy data which all flashing properties are false
@@ -172,38 +174,38 @@ const startRoulette = (unselectedIndex = 0) => {
   }, 100);
 };
 
-const onClickStartButton = () => {
+const onClickStartButton = (): void => {
   state.rouletteData = state.rouletteData.map(data => {
     return {...data, selected: (data.selected || data.flashing), flashing: false}
   });
   return startRoulette();
 };
 
-const onClickStopButton = (timerId: number) => {
+const onClickStopButton = (timerId: number): null => {
   clearInterval(timerId);
   state.unSelectedIndices = buildShuffledUnselectedIndices();
   return null;
 };
 
-const startButtonClicked = () => {
+const startButtonClicked = (): void => {
   stateButton.startButton.disabled = true;
   stateButton.stopButton.disabled = false;
   stateButton.resetButton.disabled = true;
 }
 
-const stopButtonClicked = () => {
-  stateButton.startButton.disabled = false;
+const stopButtonClicked = (): void => {
+  stateButton.startButton.disabled = state.unSelectedIndices.length === 0;
   stateButton.stopButton.disabled = true;
   stateButton.resetButton.disabled = false;
 }
 
-const resetButtonClicked = () => {
+const resetButtonClicked = (): void => {
   stateButton.startButton.disabled = false;
   stateButton.stopButton.disabled = true;
   stateButton.resetButton.disabled = true;
 }
 
-const changeButtonAttribute = (actionStatus: ActionStatus) => {
+const changeButtonAttribute = (actionStatus: ActionStatus): void => {
   switch (actionStatus) {
     case ButtonActionTypes.START:
       startButtonClicked();
@@ -236,7 +238,7 @@ stateButton.stopButton.addEventListener('click', () => {
   }
 });
 
-const buttonObserver = () => {
+const buttonObserver = (): void => {
   let storedStatus = stateButton.actionStatus;
   console.log('stateButton.actionStatus: ', stateButton.actionStatus);
 
